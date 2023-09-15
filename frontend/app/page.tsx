@@ -9,6 +9,7 @@ interface DataPoint {
 
 
 const App: React.FC = () => {
+    const threshold = 3;
     const [data, setData] = useState<DataPoint[]>([
         {  value: 0, ishighlighted: false },
         {  value: 0, ishighlighted: false },
@@ -69,11 +70,19 @@ const App: React.FC = () => {
         }
     });
 
+    useEffect(() => {
+        // if last threshold values are highlighted then send alert
+        const lastThresholdValues = data.slice(-threshold);
+        const isHighlighted = lastThresholdValues.every((d) => d.ishighlighted);
+        if (isHighlighted) {
+            alert("Leak detected!");
+        }
+    }, [data])
+
     return (
         <div className="App">
             <Chart data={data} width={800} height={300} />
         </div>
-
     );
 };
 

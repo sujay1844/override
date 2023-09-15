@@ -28,7 +28,7 @@ app = FastAPI()
 model = tf.keras.models.load_model('autoencoder.keras')
 
 # From the training data
-is_outlier = lambda x: x < 0.35750232411031924 or x > 0.659694164843159
+is_outlier = lambda x: x < 0.35750232411031924+0.05 or x > 0.659694164843159-0.05
 
 def preprocess(date_time: str, pressure: float):
     date_time = pd.to_datetime(date_time)

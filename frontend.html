@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3.js Line Graph</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <svg id="line-chart" width="800" height="400"></svg>
+    <div>
+        <label for="yValue">New data:</label>
+        <input type="number" id="yValue" placeholder="Enter new data">
+        <button id="addDataPoint">Add Data Point</button>
+    </div>
+
+    <script>
+        // Sample data array (replace with your own data)
+        let currentXValue = 6;
+        const data = [
+            { x: 1, y: 10 },
+            { x: 2, y: 20 },
+            { x: 3, y: 15 },
+            { x: 4, y: 25 },
+            { x: 5, y: 30 },
+        ];
+
+        // Set up the SVG container and margins
+        const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+        const width = 800 - margin.left - margin.right;
+        const height = 400 - margin.top - margin.bottom;
+
+        // Create an SVG element
+        const svg = d3.select("#line-chart")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Define scales for x and y axes
+        const xScale = d3.scaleLinear()
+            .domain([1, d3.max(data, d => d.x)])
+            .range([0, width]);
+
+        const yScale = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.y)])
+            .range([height, 0]);
+
+        // Create line generator
+        const line = d3.line()
+            .x(d => xScale(d.x))
+            .y(d => yScale(d.y));
+
+        // Append the line to the SVG
+        svg.append("path")
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 2)
+            .attr("d", line);
+
+        // Add x-axis
+        svg.append("g")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(xScale));
+
+        // Add y-axis
+        svg.append("g")
+            .call(d3.axisLeft(yScale));
+
+        // Add a title
+        svg.append("text")
+            .attr("x", width / 2)
+            .attr("y", 0 - (margin.top / 2))
+            .attr("text-anchor", "middle")
+            .style("font-size", "16px")
+            .text("Line Graph");
+
+        // Function to update the line graph with new data
+        function updateLineChart() {
+            // Parse input values as numbers
+            const newYValue = parseFloat(document.getElementById("yValue").value);
+            console.log(newYValue)
+
+            // Check if input values are valid numbers
+            if (!isNaN(currentXValue) && !isNaN(newYValue)) {
+                // Add the new data point to the data array
+                data.push({ x: currentXValue, y: newYValue });
+
+                // Update the xScale and yScale domains
+                xScale.domain([1, d3.max(data, d => d.x)]);
+                yScale.domain([0, d3.max(data, d => d.y)]);
+
+                // Update the line
+                svg.select("path")
+                    .datum(data)
+                    .transition()
+                    .attr("d", line);
+
+                // Update the x-axis
+                svg.select(".x-axis")
+                    .call(d3.axisBottom(xScale));
+
+                // Update the y-axis
+                svg.select(".y-axis")
+                    .call(d3.axisLeft(yScale));
+
+                // Clear input values
+                document.getElementById("yValue").value = "";
+            }
+            currentXValue++;
+        }
+
+        // Add click event listener to the "Add Data Point" button
+        document.getElementById("addDataPoint").addEventListener("click", updateLineChart);
+
+
+
+    </script>
+</body>
+
+</html>

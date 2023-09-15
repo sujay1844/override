@@ -8,8 +8,22 @@ from fastapi import FastAPI
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
+class WSManager:
+    def __init__(self):
+        self.websocket = None
+
+    def set_websocket(self, websocket):
+        self.websocket = websocket
+
+    async def send_json(self, data):
+        print("sending data")
+        if self.websocket:
+            await self.websocket.send_json(data)
+        else:
+            print("No websocket connection")
+manager = WSManager()
+
 app = FastAPI()
-websocket = None
 
 model = tf.keras.models.load_model('autoencoder.keras')
 
@@ -35,7 +49,8 @@ def check_if_outlier(date_time: str, pressure: float, model: Sequential, is_outl
 
 
 @app.get("/ping")
-def read_root():
+async def read_root():
+    await manager.send_json({"message": "Hello World"})
     return {"message": "pong"}
 
 class NewData(BaseModel):
@@ -43,29 +58,31 @@ class NewData(BaseModel):
     pressure: float
 
 @app.post("/new")
-def new_data(new_data: NewData):
-    global websocket
+async def new_data(new_data: NewData):
     date_time = new_data.date_time
     pressure = new_data.pressure
     result = check_if_outlier(date_time, pressure, model, is_outlier)
     output_data = {
-        "date_time": date_time,
-        "pressure": pressure,
-        "is_outlier": result
+        # "index": str(date_time),
+        "value": str(pressure),
+        "ishighlighted": int(result),
     }
-
-    # websocket.send_json(output_data)
+    print(output_data)
+    await manager.send_json(output_data)
+    
     print(output_data['is_outlier'])
 
 @app.websocket("/dash")
 async def websocket_endpoint(ws: WebSocket):
-    websocket = ws
-    await websocket.accept()
+    await ws.accept()
+    manager.set_websocket(ws)
     print("Client connected")
     try:
         while True:
-            await websocket.receive_text()
+            # await manager.send_json({"message": "Hello World"})
+            await ws.receive_text()
     except WebSocketDisconnect:
         print("Client disconnected")
-        await websocket.close()
+        await ws.close()
+        manager.set_websocket(None)
     

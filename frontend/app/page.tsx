@@ -1,34 +1,67 @@
-'use client'
-import React, { useState, useEffect } from 'react';
-import Chart from '@/lib/Chart';
+'use client';
+import React, { useState, useEffect } from "react";
+import Chart from "@/lib/Chart";
 
-function App() {
-  const width = 1000;
-  const height = 500;
-  const [data, setData] = useState<number[]>([10, 20, 15, 25, 30, 45, 40, 50, 60, 50, 40, 30, 20, 10]);
+interface DataPoint {
+  index: number;
+  value: number;
+  ishighlighted: boolean;
+}
 
-  const updateData = () => {
-    // Remove the oldest entry and append a new entry
-    setData(prevData => {
-      const newData = prevData.slice(1); // Remove the first element
-      const newValue = Math.random() * 20 + 10; // Generate a new value
-      newData.push(newValue); // Append the new value
-      return newData;
-    });
-  };
+const App: React.FC = () => {
+  const [data, setData] = useState<DataPoint[]>([
+    { index: 0, value: 0, ishighlighted: false },
+    { index: 1, value: 0, ishighlighted: false },
+    { index: 2, value: 0, ishighlighted: false },
+    { index: 3, value: 0, ishighlighted: false },
+    { index: 1, value: 0, ishighlighted: false },
+    { index: 2, value: 0, ishighlighted: false },
+    { index: 0, value: 0, ishighlighted: false },
+    { index: 1, value: 0, ishighlighted: false },
+    { index: 2, value: 0, ishighlighted: false },
+    { index: 0, value: 0, ishighlighted: false },
+    { index: 1, value: 0, ishighlighted: false },
+    { index: 2, value: 0, ishighlighted: false },
+    { index: 0, value: 0, ishighlighted: false },
+    { index: 1, value: 0, ishighlighted: false },
+    { index: 2, value: 0, ishighlighted: false },
+    { index: 0, value: 0, ishighlighted: false },
+    { index: 1, value: 0, ishighlighted: false },
+    { index: 2, value: 0, ishighlighted: false },
+    { index: 0, value: 0, ishighlighted: false },
+    { index: 1, value: 0, ishighlighted: false },
+    { index: 2, value: 0, ishighlighted: false },
+    { index: 0, value: 0, ishighlighted: false },
+    { index: 1, value: 0, ishighlighted: false },
+    { index: 2, value: 0, ishighlighted: false },
+  ]);
+
 
   useEffect(() => {
-    // Update the data every second (for example)
-    const interval = setInterval(updateData, 1000);
+    const generateDataPoint = () => {
+      const newDataPoint: DataPoint = {
+        index: data.length,
+        value: Math.random() * 100, // Example random value
+        ishighlighted: Math.random() > 0.5, // Example random boolean value
+      };
+      return newDataPoint;
+    }
+    const addNewDataPoint = () => {
+      const newDataPoint = generateDataPoint();
 
-    return () => clearInterval(interval);
-  }, []);
+      setData((prevData) => [...prevData.slice(1), newDataPoint]);
+    };
+
+    const intervalId = setInterval(addNewDataPoint, 1000); // Add a new point every second
+
+    return () => clearInterval(intervalId);
+  }, [data]);
 
   return (
     <div className="App">
-      <Chart data={data} width={width} height={height}/>
+      <Chart data={data} width={800} height={300} />
     </div>
   );
-}
+};
 
 export default App;

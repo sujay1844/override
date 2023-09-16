@@ -77,7 +77,9 @@ const LineGraph: React.FC<LineGraphProps> = ({
       .attr("class", "line")
       .attr("d", line)
       .attr("fill", "none")
-      .attr("stroke", "steelblue");
+      .attr("stroke", "steelblue")
+      .transition()
+      .duration(200);
 
     // Draw circles for DataPoints
     g.selectAll(".datapoint")
@@ -93,8 +95,8 @@ const LineGraph: React.FC<LineGraphProps> = ({
   }, [data, width, height, margin, innerHeight, innerWidth]);
 
   return (
-    <svg width={width} height={height}>
-      <g ref={svgRef} />
+    <svg ref={svgRef} width={width} height={height}>
+      {/* <g ref={svgRef} /> */}
     </svg>
   );
 };

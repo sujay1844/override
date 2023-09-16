@@ -7,6 +7,25 @@ from tensorflow.keras.models import Sequential
 from fastapi import FastAPI
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+
+uri = "mongodb+srv://sujay:B8BbdtNo0m7H7w9D@cluster0.tg5w5bp.mongodb.net/?retryWrites=true&w=majority"
+
+# Create a new client and connect to the server
+client = MongoClient(uri, server_api=ServerApi('1'))
+
+# Send a ping to confirm a successful connection
+try:
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
+
+db = client['water_leak']
+collection = db['sensor_data']
 
 class WSManager:
     def __init__(self):
@@ -24,6 +43,12 @@ class WSManager:
 manager = WSManager()
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 model = tf.keras.models.load_model('autoencoder.keras')
 
@@ -63,14 +88,15 @@ async def new_data(new_data: NewData):
     pressure = new_data.pressure
     result = check_if_outlier(date_time, pressure, model, is_outlier)
     output_data = {
-        # "index": str(date_time),
-        "value": str(pressure),
-        "ishighlighted": int(result),
+        "date_time": str(date_time),
+        "value": float(pressure),
+        "ishighlighted": bool(result),
     }
-    print(output_data)
+    collection.insert_one(output_data)
+    del output_data['_id']
     await manager.send_json(output_data)
     
-    print(output_data['is_outlier'])
+    # print(output_data['is_outlier'])
 
 @app.websocket("/dash")
 async def websocket_endpoint(ws: WebSocket):
@@ -86,3 +112,14 @@ async def websocket_endpoint(ws: WebSocket):
         await ws.close()
         manager.set_websocket(None)
     
+@app.get("/data")
+async def read_data():
+    data = collection.find()
+    output = []
+    for entry in data:
+        output.append({
+            'date_time': entry['date_time'],
+            'value': entry['value'],
+            'ishighlighted': entry['ishighlighted']
+        })
+    return list(output)
